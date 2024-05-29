@@ -1,9 +1,13 @@
 {
     "version": "0.1",
     "name": "MathDoku",
+    "short_name": "MathDoku",
     "description": "A MathDoku clone as a progressive WebApp.",
     "display": "standalone",
-    "launch_path": "index.html",
+    "start_url": "index.html?standalone=true",
+    "lang": "en",
+    "orientation": "portrait",
+    "background_color": "#000",
     "icons": [
         {
             "src": "img/favicon_io/android-chrome-192x192.png",
@@ -13,19 +17,11 @@
         },
         {
             "src": "img/favicon_io/android-chrome-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "img/favicon_io//-touch-icon.png,"
-            "sizes": "180x180",
+            "sizes": "512x512 284x284 142x142 71x71 107x107 89x89",
             "type": "image/png",
             "purpose": "maskable"
         }
     ],
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff",
     "developer": {
         "name": "Magnus Manske",
         "url": "http://github.com/magnusmanske/mathdoku"
