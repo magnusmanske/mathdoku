@@ -1,0 +1,54 @@
+<template id='new-page-template'>
+<div class='container-fluid container-lg myscreen' style="color: white; font-size: 3rem;">
+<h1 style="font-size: 6rem;">New puzzle</h1>
+<div style="margin: 2rem;">
+    <div>
+        <input type="range" class="form-range" min="4" max="9" v-model="size">
+        Puzzle size: {{size}}&times;{{size}}
+    </div>
+    <div>
+        <input type="range" class="form-range" min="1" max="5" v-model="difficulty">
+        Difficulty: {{difficulty}}
+    </div>
+    <div>
+        <button class="btn btn-lg btn-outline-primary" @click.prevent='initialize_game'>Generate puzzle</button>
+    </div>
+</div>
+</div>
+</template>
+
+<script>
+'use strict';
+
+let NewPage = Vue.extend ( {
+    props : ['default_size'] ,
+    data : function () { return {
+        size: 4,
+        difficulty: 1,
+    } } ,
+    created : function () {
+        this.size = (this.default_size??4)*1;
+        this.difficulty = (this.$route.query.difficulty??1)*1;
+    } ,
+    updated : function () {} ,
+    mounted : function () {} ,
+    methods : {
+        initialize_game: function() {
+            let size = this.size;
+            let j = {
+                cells: sudokuGenerator.generateCells(size,this.difficulty),
+                difficulty: this.difficulty,
+                maybe_mode: false,
+                timer: 0,
+                selected_cell: -1,
+                settings: {timer_is_visible: false},
+            };
+            j = JSON.stringify(j);
+            let key = "board_"+size;
+            localStorage.setItem(key,j);
+            this.$router.push("/game/"+size);
+        }
+    } ,
+    template:'#new-page-template'
+} ) ;
+</script>

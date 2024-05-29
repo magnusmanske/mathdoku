@@ -1,0 +1,21 @@
+<template id='game-page-template'>
+<div class='container-fluid container-lg myscreen'>
+    <board :size='size'></board>
+</div>
+</template>
+
+<script>
+'use strict';
+
+let GamePage = Vue.extend ( {
+    props : ['size'] ,
+    data : function () { return {} } ,
+    created : function () {
+    } ,
+    updated : function () {} ,
+    mounted : function () {} ,
+    methods : {
+    } ,
+    template:'#game-page-template'
+} ) ;
+</script>

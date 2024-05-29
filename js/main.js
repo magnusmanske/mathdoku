@@ -4,7 +4,7 @@ let router ;
 let app ;
 
 var sudokuGenerator = {
-	generateCells: function(size) {
+	generateCells: function(size,difficulty) {
 		let cells = [];
 		let solution = this.generateSudoku(size);
     	for (let row = 0; row < size; row++) {
@@ -24,15 +24,15 @@ var sudokuGenerator = {
     			cells.push(cell);
     		}
     	}
-    	this.updateCellsWithRegions(solution,cells);
+    	this.updateCellsWithRegions(solution,cells,difficulty);
     	return cells;
 	},
-    updateCellsWithRegions: function(solution,cells) {
+    updateCellsWithRegions: function(solution,cells,difficulty) {
     	let size = solution.length;
     	let max = 5;
     	if (size<7) max=4;
     	if (size<5) max=3;
-		let regions = this.generateRegions(solution,max);
+		let regions = this.generateRegions(solution,max,difficulty);
     	for(let region of regions) {
     		let top_cell = 9999; // Unreachably high
     		for (let cell of region.cells) {
@@ -52,7 +52,10 @@ var sudokuGenerator = {
     	}
     },
 
-	generateRegions: function(board,max_region_size) {
+	generateRegions: function(board,max_region_size,difficulty) {
+		if ( difficulty+1<max_region_size ) {
+			max_region_size = difficulty+1;
+		}
 		let regions = [];
 		let size = board.length;
 		let sections = Array.from({ length: size }, () => Array.from({ length: size }, () => -1));
@@ -112,6 +115,7 @@ var sudokuGenerator = {
 				let v2 = this.getCellValue(board,region.cells[1]);
 				if (v1%v2==0) candidate_texts.push(''+(v1/v2)+'/');
 				if (v2%v1==0) candidate_texts.push(''+(v2/v1)+'/');
+				candidate_texts.push(''+Math.abs(v1-v2)+'-');
 			}
 			if (region.cells.length>=2) {
 				let sum = 0;
@@ -187,6 +191,8 @@ $(document).ready ( function () {
     Promise.all ( [
         vue_components.loadComponents ( [
             'js/main-page.html',
+            'js/game-page.html',
+            'js/new-page.html',
             'js/cell.html',
             'js/board.html',
             ] )
@@ -194,9 +200,9 @@ $(document).ready ( function () {
     .then ( () => {
 		const routes = [
 			{ path: '/', component: MainPage , props:true },
-			{ path: '/game/:size', component: MainPage , props:true },
-			// { path: '/subject/:subject/:q', component: SubjectPage , props:true },
-			// { path: '/shex/:e', component: ShexPage , props:true },
+			{ path: '/game/:size', component: GamePage , props:true },
+			{ path: '/new', component: NewPage , props:true },
+			{ path: '/new/:default_size', component: NewPage , props:true },
 		] ;
 		router = new VueRouter({routes}) ;
 		app = new Vue ( { router } ) .$mount('#app') ;

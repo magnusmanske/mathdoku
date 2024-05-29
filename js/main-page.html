@@ -1,7 +1,31 @@
 <template id='main-page-template'>
-<div class='container-fluid container-lg'>
-    <!-- <h1>MathDoku</h1> -->
-    <board :size='size??4'></board>
+<div class='container-fluid container-lg myscreen' style="color: white; font-size: 3rem;">
+<h1 style="font-size: 6rem;">MathDoku</h1>
+<div class="lead" style="margin: 2rem; font-size: 2rem;">
+<p>
+    <i>MathDoku</i> is a variant of Sudoku.
+    Rows and cloumns contain unique values, respectively.
+    But instead of the 3&times;3 sub-grids, there are sections that fulfil a mathematical equation.
+    For example, a region that is tagged as "15+" needs to add up to 15.
+    Likewise, "7/" means that one of the values in the region, divided by 7, results in the other value.
+    The "-" and "/" operators only show for regions of two cells, "+" and "*" can have more cells.
+</p>
+
+<p>
+    You can activate a "maybe mode", where you can set possible values for a cell.
+    If a cell in the same row or column is set, the respective possible values will be automatically cleared.
+    You can adjust the game size from 4&times;4 to 9&times;9, and the difficulty from 1-5.
+    A timer will run in the background.
+    Why not start with a <router-link :to="'/new/4'">new game</router-link>?
+</p>
+<p>
+    This is a "progressive web app" primarily designed for mobile.
+    That means you can "install" the game as an app on your phone.
+    On Android, open this page in Chrome mobile, then select "Install app" from the ⋮ menu.
+</p>
+<p>
+    <img src="img/screenshot.png" style="width: 100%" />
+</p>
 </div>
 </template>
 

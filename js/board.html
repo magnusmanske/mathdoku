@@ -53,10 +53,11 @@ div.board-grid {
 <div class="board-header">
 	<div style="float: right">
 		<div class="dropdown">
-			<button class="btn btn-primary-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white; font-size: 2rem;">≡</button>
+			<button class="btn btn-primary-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white; font-size: 2rem;">⋮</button>
 			<ul class="dropdown-menu dropdown-menu-end" style="font-size: 3rem; ">
 				<li><button class="dropdown-item" type="button" @click.prevent="toggle_timer_visibility">Toggle timer</button></li>
 				<li><button class="dropdown-item" type="button" @click.prevent="clear_grid">Clear grid</button></li>
+				<li><router-link class="dropdown-item" type="button" :to="'/new/'+size+'?difficulty='+difficulty">New game</router-link></li>
 			</ul>
 		</div>
 	</div>
@@ -118,6 +119,7 @@ Vue.component ( 'board' , {
 	props : [ 'size' ] ,
 	data : function () { return {
 		cells: [],
+		difficulty: 1,
 		maybe_mode: false,
 		selected_cell: -1,
 		undo: [],
@@ -127,12 +129,16 @@ Vue.component ( 'board' , {
 	} } ,
     created : function () {
     	if (this.size*1<4||this.size*1>9) return;
+    	document.addEventListener('keyup', this.on_key);
     	if ( !this.load_board_from_local_storage() ) {
-	    	this.cells = sudokuGenerator.generateCells(this.size*1);
+	    	this.cells = sudokuGenerator.generateCells(this.size*1,this.difficulty);
 	    	this.save_board_to_local_storage();
 	    }
     	this.interval = setInterval(this.increase_timer,1000); // Call every second
     },
+	beforeDestroy() {
+		document.removeEventListener('keyup', this.on_key);
+	},
     updated : function () {} ,
     mounted : function () {
     	let fontsize = 120+(9-this.size*1)*30;
@@ -145,12 +151,12 @@ Vue.component ( 'board' , {
     		if (ls===null) return false;
     		let j = JSON.parse(ls);
     		if (j===null) return false;
-    		for(let prop of ['cells','settings','timer','maybe_mode','selected_cell']) Vue.set(this,prop,j[prop]);
+    		for(let prop of ['cells','settings','timer','maybe_mode','selected_cell','difficulty']) Vue.set(this,prop,j[prop]);
     		return true;
     	},
     	save_board_to_local_storage: function() {
     		let j = {};
-    		for(let prop of ['cells','settings','timer','maybe_mode','selected_cell']) j[prop] = this[prop];
+    		for(let prop of ['cells','settings','timer','maybe_mode','selected_cell','difficulty']) j[prop] = this[prop];
     		j = JSON.stringify(j);
     		let key = "board_"+this.size;
     		localStorage.setItem(key,j);
@@ -192,7 +198,7 @@ Vue.component ( 'board' , {
     		let j = this.undo.pop();
     		this.cells = JSON.parse(j);
     	},
-    	set_value: function(value,ev) {
+    	set_value: function(value) {
     		if ( this.selected_cell<0 ) return; // No cell selected
     		if ( value==0 ) {
 	    		this.undo_add();
@@ -238,6 +244,16 @@ Vue.component ( 'board' , {
     		for(let r=0;r<size;r++) {
     			let cell_num = r*size+col;
     			Vue.set(this.cells[cell_num].possible,value,false);
+    		}
+    	},
+    	on_key: function(ev) {
+    		let value = ev.key*1;
+    		if (value>0) {
+    			this.set_value(value);
+    		} else if (ev.key=="Backspace") {
+    			this.set_value(0);
+    		} else {
+    			// console.log(ev)
     		}
     	}
     } ,
