@@ -1,0 +1,6 @@
+This favicon was generated using the following font:
+
+- Font Title: Ledger
+- Font Author: Copyright (c) 2011, Denis Masharov <denis.masharov@gmail.com>.
+- Font Source: https://fonts.gstatic.com/s/ledger/v16/j8_q6-HK1L3if_sxm8DwHTBhHw.ttf
+- Font License: SIL Open Font License, 1.1 (http://scripts.sil.org/OFL))

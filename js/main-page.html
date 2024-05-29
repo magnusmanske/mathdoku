@@ -1,0 +1,22 @@
+<template id='main-page-template'>
+<div class='container-fluid container-lg'>
+    <!-- <h1>MathDoku</h1> -->
+    <board :size='size??4'></board>
+</div>
+</template>
+
+<script>
+'use strict';
+
+let MainPage = Vue.extend ( {
+    props : ['size'] ,
+    data : function () { return {} } ,
+    created : function () {
+    } ,
+    updated : function () {} ,
+    mounted : function () {} ,
+    methods : {
+    } ,
+    template:'#main-page-template'
+} ) ;
+</script>

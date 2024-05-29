@@ -1,0 +1,222 @@
+<style>
+div.board-grid {
+	background-color: #DDD;
+	display:grid;
+	grid-gap: 0.1rem;
+	border: 1px solid black;
+	grid-template-columns: repeat(4, 1fr);
+}
+
+.number-button {
+	background-color: #1291ed;
+	font-family: Courier;
+	font-size: 4rem;
+	text-align: center;
+	display: inline-block;
+	border: 3px solid black;
+	width: 100%;
+	font-width: bold;
+	margin-right: 0.2rem;
+	cursor: pointer;
+}
+.header-button {
+	font-size: 4rem;
+	display: inline-block;
+	cursor: pointer;
+	margin-right: 0.2rem;
+}
+
+.board-header {
+	color: white;
+	font-size: 3rem;
+	margin-bottom: 0.5rem;
+	overflow: hidden;
+}
+.normal-mode {
+	color: #1291ed;
+}
+.normal-text
+ {
+ 	color: white;
+ }
+.maybe-mode {
+	color: orange;
+}
+</style>
+
+<template id='board-template'>
+<div v-if="size*1<4||size*1>9" class="normal-text">
+	Valid game ranges are 4-9.
+</div>
+<div v-else>
+
+<div class="board-header">
+	<div style="float: right">
+		<div class="header-button" @click.prevent="settings.timer_is_visible=!settings.timer_is_visible" title="Toggle timer visibility">🕑</div>
+	</div>
+	<span v-if="maybe_mode">
+		<span class="maybe-mode">⬤</span>
+		'Maybe' mode
+	</span>
+	<span v-else>
+		<span class="normal-mode">⬤</span>
+		Normal mode
+	</span>
+</div>
+
+<div class="board-grid" :style="'grid-template-columns: repeat('+size+', 1fr);'">
+	<cell v-for="cell in cells" :key="'cell_'+cell.num" :cell='cell' :maybe_mode='maybe_mode' @selected="select_cell(cell.num)"></cell>
+</div>
+
+<div style="text-align: center; margin-top: 1rem; margin-left: 5%; margin-right: 5%;">
+	<div :class="'board-grid '+(maybe_mode?'maybe-mode':'normal-text')">
+		<div v-if="size*1>=1" class="number-button" @click.prevent="set_value(1)">1</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div v-if="size*1>=2" class="number-button" @click.prevent="set_value(2)">2</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div v-if="size*1>=3" class="number-button" @click.prevent="set_value(3)">3</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div class="number-button" @click.prevent="maybe_mode=!maybe_mode">✎</div>
+
+		<div v-if="size*1>=4" class="number-button" @click.prevent="set_value(4)">4</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div v-if="size*1>=5" class="number-button" @click.prevent="set_value(5)">5</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div v-if="size*1>=6" class="number-button" @click.prevent="set_value(6)">6</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div class="number-button normal-text" @click.prevent="set_value(0)">🗑</div>
+
+		<div v-if="size*1>=7" class="number-button" @click.prevent="set_value(7)">7</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div v-if="size*1>=8" class="number-button" @click.prevent="set_value(8)">8</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div v-if="size*1>=9" class="number-button" @click.prevent="set_value(9)">9</div>
+		<div v-else class="number-button">&nbsp;</div>
+		<div v-if="undo.length>0" class="number-button normal-text" @click.prevent="undo_one()">⎌</div>
+		<div v-else class="number-button">&nbsp;</div>
+	</div>
+
+	<div v-if="settings.timer_is_visible" class="normal-text" style="font-size: 5rem;">
+		{{two_digit(timer/60)}}:{{two_digit(timer%60)}}
+	</div>
+</div>
+
+</div>
+</template>
+
+
+<script>
+'use strict';
+
+Vue.component ( 'board' , {
+	props : [ 'size' ] ,
+	data : function () { return {
+		cells: [],
+		maybe_mode: false,
+		selected_cell: -1,
+		undo: [],
+		timer: 0, // Seconds played with visible page
+		settings: {timer_is_visible: false},
+		interval: '',
+	} } ,
+    created : function () {
+    	if (this.size*1<4||this.size*1>9) return;
+    	if ( !this.load_board_from_local_storage() ) {
+	    	this.cells = sudokuGenerator.generateCells(this.size*1);
+	    	this.save_board_to_local_storage();
+	    }
+    	this.interval = setInterval(this.increase_timer,1000); // Call every second
+    },
+    updated : function () {} ,
+    mounted : function () {} ,
+    methods : {
+    	load_board_from_local_storage: function() {
+    		let key = "board_"+this.size;
+    		let ls = localStorage.getItem(key);
+    		if (ls===null) return false;
+    		let j = JSON.parse(ls);
+    		if (j===null) return false;
+    		for(let prop of ['cells','settings','timer','maybe_mode']) Vue.set(this,prop,j[prop]);
+    		return true;
+    	},
+    	save_board_to_local_storage: function() {
+    		let j = {};
+    		for(let prop of ['cells','settings','timer','maybe_mode']) j[prop] = this[prop];
+    		j = JSON.stringify(j);
+    		let key = "board_"+this.size;
+    		localStorage.setItem(key,j);
+    	},
+    	two_digit: function(num) {
+    		num = Math.floor(num);
+    		if (num<10) return '0'+num;
+    		return ''+num;
+    	},
+    	increase_timer: function() {
+    		if (document.visibilityState === 'visible') this.timer += 1;
+    	},
+    	select_cell: function(num) {
+    		if ( this.selected_cell>-1 ) this.cells[this.selected_cell].selected = false;
+    		this.cells[num].selected = true;
+    		this.selected_cell = num;
+    	},
+    	undo_add: function() {
+    		let j = JSON.stringify(this.cells);
+    		this.undo.push(j);
+    	},
+    	undo_one: function() {
+    		if (this.undo.length==0) return; // No undo information
+    		let j = this.undo.pop();
+    		this.cells = JSON.parse(j);
+    	},
+    	set_value: function(value) {
+    		if ( this.selected_cell<0 ) return; // No cell selected
+    		this.undo_add();
+    		if ( value==0 ) {
+    			this.cells[this.selected_cell].value = 0;
+    			this.cells[this.selected_cell].possible = sudokuGenerator.get_possible_empty();
+    		} else if ( this.maybe_mode ) {
+    			this.cells[this.selected_cell].value = 0; // Needs to not have a value
+    			let current = this.cells[this.selected_cell].possible[value];
+    			Vue.set(this.cells[this.selected_cell].possible, value, !current);
+    		} else if (this.cells[this.selected_cell].value!=value) {
+    			let row = this.cells[this.selected_cell].row;
+    			let col = this.cells[this.selected_cell].col;
+    			this.cells[this.selected_cell].value = value;
+    			this.remove_possibilities(row,col,value);
+    		} else {
+    			return; // No action performed
+    		}
+    		this.check_complete();
+    		this.remember_state();
+    	},
+    	check_complete: function() {
+    		for (let cell of this.cells) {
+    			if ( cell.value==0 || cell.value!=cell.solution ) return;
+    		}
+    		clearInterval(this.interval);
+    		let min = Math.floor(this.timer/60);
+    		let sec = this.timer%60;
+    		let unnecessary = this.undo.length-this.cells.length; // All actions minus required ones
+    		alert("Solved in "+this.two_digit(min)+":"+this.two_digit(sec)+", with "+unnecessary+" unnecessary steps.");
+    	},
+    	remember_state: function() {
+    		this.save_board_to_local_storage();
+    	},
+    	remove_possibilities: function(row,col,value) {
+    		if ( value<1 ) return;
+    		let size = this.size*1;
+    		for(let c=0;c<size;c++) {
+    			let cell_num = row*size+c;
+    			Vue.set(this.cells[cell_num].possible,value,false);
+    		}
+    		for(let r=0;r<size;r++) {
+    			let cell_num = r*size+col;
+    			Vue.set(this.cells[cell_num].possible,value,false);
+    		}
+    	}
+    } ,
+	template : '#board-template'
+} ) ;
+
+</script>
+
