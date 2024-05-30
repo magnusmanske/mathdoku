@@ -53,7 +53,7 @@ var sudokuGenerator = {
     },
 
 	generateRegions: function(board,max_region_size,difficulty) {
-		if ( difficulty+1<max_region_size ) {
+		if ( difficulty+1<max_region_size && difficulty<5 ) {
 			max_region_size = difficulty+1;
 		}
 		let regions = [];

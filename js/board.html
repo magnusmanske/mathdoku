@@ -55,6 +55,7 @@ div.board-grid {
 		<div class="dropdown">
 			<button class="btn btn-primary-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white; font-size: 2rem;">⋮</button>
 			<ul class="dropdown-menu dropdown-menu-end" style="font-size: 3rem; ">
+				<li><router-link class="dropdown-item" type="button" to="/">Home</router-link></li>
 				<li><button class="dropdown-item" type="button" @click.prevent="toggle_timer_visibility">Toggle timer</button></li>
 				<li><button class="dropdown-item" type="button" @click.prevent="clear_grid">Clear grid</button></li>
 				<li><router-link class="dropdown-item" type="button" :to="'/new/'+size+'?difficulty='+difficulty">New game</router-link></li>
@@ -83,7 +84,7 @@ div.board-grid {
 		<div v-else class="number-button">&nbsp;</div>
 		<div v-if="size*1>=3" class="number-button" @touchstart.prevent="set_value(3,$event)" @click.prevent="set_value(3,$event)">3</div>
 		<div v-else class="number-button">&nbsp;</div>
-		<div class="number-button" @click.prevent="maybe_mode=!maybe_mode">✎</div>
+		<div class="number-button" @click.prevent="toggle_maybe_mode">✎</div>
 
 		<div v-if="size*1>=4" class="number-button" @touchstart.prevent="set_value(4,$event)" @click.prevent="set_value(4,$event)">4</div>
 		<div v-else class="number-button">&nbsp;</div>
@@ -129,7 +130,7 @@ Vue.component ( 'board' , {
 	} } ,
     created : function () {
     	if (this.size*1<4||this.size*1>9) return;
-    	document.addEventListener('keyup', this.on_key);
+    	document.addEventListener('keydown', this.on_key);
     	if ( !this.load_board_from_local_storage() ) {
 	    	this.cells = sudokuGenerator.generateCells(this.size*1,this.difficulty);
 	    	this.save_board_to_local_storage();
@@ -137,12 +138,15 @@ Vue.component ( 'board' , {
     	this.interval = setInterval(this.increase_timer,1000); // Call every second
     },
 	beforeDestroy() {
-		document.removeEventListener('keyup', this.on_key);
+		document.removeEventListener('keydown', this.on_key);
 	},
     updated : function () {} ,
     mounted : function () {
-    	let fontsize = 120+(9-this.size*1)*30;
-    	$('div.maybe-grid-div').css({'font-size':fontsize+'%'})
+    	let fontsize = 130+(9-this.size*1)*30;
+    	if ($('body').width()>=1281) {
+    		fontsize = 80+(9-this.size*1)*30;
+    	}
+    	$('div.maybe-grid').css({'font-size':fontsize+'%'})
     } ,
     methods : {
     	load_board_from_local_storage: function() {
@@ -177,6 +181,10 @@ Vue.component ( 'board' , {
     	},
     	toggle_timer_visibility: function() {
     		this.settings.timer_is_visible = !this.settings.timer_is_visible;
+    		this.remember_state();
+    	},
+    	toggle_maybe_mode: function() {
+    		this.maybe_mode = !this.maybe_mode;
     		this.remember_state();
     	},
     	clear_grid: function() {
@@ -246,15 +254,39 @@ Vue.component ( 'board' , {
     			Vue.set(this.cells[cell_num].possible,value,false);
     		}
     	},
+    	move_cursor: function(delta_row,delta_col) {
+    		if ( this.selected_cell<0 ) return;
+    		let size = this.size*1;
+    		let row = this.cells[this.selected_cell].row+delta_row;
+    		let col = this.cells[this.selected_cell].col+delta_col;
+    		if (col<0||row<0||row>=size||col>=size) return;
+    		let cell_num = row*size+col;
+    		this.select_cell(cell_num);
+    	},
     	on_key: function(ev) {
+    		ev.preventDefault();
+    		ev.stopPropagation();
+    		ev.stopImmediatePropagation();
+    		if (ev.altKey||ev.ctrlKey||ev.metaKey||ev.shiftKey) return; // No meta keys
     		let value = ev.key*1;
     		if (value>0) {
-    			this.set_value(value);
+    			if (value<=this.size*1) this.set_value(value);
     		} else if (ev.key=="Backspace") {
     			this.set_value(0);
+    		} else if (ev.key=="ArrowLeft") {
+    			this.move_cursor(0,-1);
+    		} else if (ev.key=="ArrowRight") {
+    			this.move_cursor(0,1);
+    		} else if (ev.key=="ArrowUp") {
+    			this.move_cursor(-1,0);
+    		} else if (ev.key=="ArrowDown") {
+    			this.move_cursor(1,0);
+    		} else if (ev.key=="Enter") {
+    			this.toggle_maybe_mode();
     		} else {
     			// console.log(ev)
     		}
+    		return true;
     	}
     } ,
 	template : '#board-template'
