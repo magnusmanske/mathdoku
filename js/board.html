@@ -205,6 +205,10 @@ Vue.component ( 'board' , {
     		if (this.undo.length==0) return; // No undo information
     		let j = this.undo.pop();
     		this.cells = JSON.parse(j);
+    		this.selected_cell = -1;
+    		for (cell of this.cells) {
+    			if (cell.selected) this.selected_cell = cell.num;
+    		}
     	},
     	set_value: function(value) {
     		if ( this.selected_cell<0 ) return; // No cell selected
